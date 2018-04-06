@@ -128,23 +128,47 @@ struct Player {
 
 namespace gamemaster {
 Player gA, gB;
-uint gTruns;
+uint gTurns;
 constexpr uint kMaxTurns = 9;
 constexpr uint kMaxScore = 3;
-void InitializeGame();
+constexpr uint kMilisecWaitForTurn = 800;
+void InitializeGame() {
+  // initialize hardware, initializing globals will be done in "ResetGame"
+  hardware::Setup();
+  gamemaster::ResetGame();
+}
 void GetPlayerMoves(Operation* player1_move, Operation* player2_move,
-                    uint max_wait_time_miliseconds);
-void PlayMove();
+                    uint max_wait_time_miliseconds) {
+  hardware::sensors::get_player_moves(player1_move, player2_move);
+}
+void PlayMove(Player* a, Player* b);
+
 /* returns if the game has finished from this turn. Either from points or turn
  * count */
-bool RunOneTurn();
-void RunOneGame();
-void ResetGame();
+bool RunOneTurn() {
+  GetPlayerMoves(&gA.current_turn, &gB.current_turn, kMilisecWaitForTurn);
+  PlayMove(&gA, &gB);
+  return GameIsDone();
+}
+bool GameIsDone() {
+  return (gTurns >= kMaxTurns) || (gA.points >= kMaxScore) ||
+         (gB.points >= kMaxScore);
+}
+void RunOneGame() {
+  while (!gamemaster::RunOneTurn()) {
+  }
+}
+void ResetGame() {
+  // reset globals
+  gTurns = 0;
+  gA.ammunition = 0;
+  gA.current_turn = Operation::kNotAvailable;
+  gA.points = 0;
+  gB.ammunition = 0;
+  gB.current_turn = Operation::kNotAvailable;
+  gB.points = 0;
+}
 }  // namespace gamemaster
-
-/* Returns if we should stop the roudns. (we clicked stop for mainenance or
- * something)*/
-bool StopRounds();
 
 /* Arduino required functions */
 
@@ -154,8 +178,6 @@ void setup() {
 }
 
 void loop() {
-  while (!StopRounds()) {
-    gamemaster::ResetGame();
-    gamemaster::RunOneGame();
-  }
+  gamemaster::ResetGame();
+  gamemaster::RunOneGame();
 }
