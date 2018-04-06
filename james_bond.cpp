@@ -3,6 +3,10 @@
     Code to play a life like version of the "load, defend, shoot game". I really
     don't know a better name for it. Some people on the internet are calling it
    "James Bond" so, we'll roll with that name.
+
+   This code is one file (no .h/.hpp/.cpp) since this is made to run on an
+   arduino and therefore have one file will make compiling and uploading more
+   convenient.
 */
 typedef unsigned int uint;
 
@@ -61,24 +65,59 @@ namespace executer {
  */
 
 /* Unique situations to handle */
-void a_shoot_b_shoot();
-void a_shoot_b_load();
-void a_load_b_shoot();
-void a_shoot_b_defend();
-void a_defend_b_shoot();
+void a_shoot_b_shoot() {
+#warning running stub for "a_shoot_b_shoot"
+}
+void a_shoot_b_load() {
+#warning running stub for "a_shoot_b_load"
+}
+void a_load_b_shoot() {
+#warning running stub for "a_load_b_shoot"
+}
+void a_shoot_b_defend() {
+#warning running stub for "a_shoot_b_defend"
+}
+void a_defend_b_shoot() {
+#warning running stub for "a_defend_b_shoot"
+}
 
 /* Mutual actions */
-void defend();
-void nothing();
+void defend() {
+#warning running stub for "defend"
+}
+void nothing() {
+#warning running stub for "nothing"
+}
+
+/* setup ports for motors */
+void Setup() {
+#warning running stub for "executer::Setup"
+}
 }  // namespace executer
 
 namespace sensors {
 /* this function will poll the sensors simultaneously */
-void get_player_moves(Operation* player1_move, Operation* player2_move);
+void get_player_moves(Operation* player1_move, Operation* player2_move) {
+#warning running stub for "get_player_moves"
+  if (player1_move) {
+    *player1_move = Operation::kLoad;
+  }
+  if (player2_move) {
+    *player2_move = Operation::kLoad;
+  }
+}
+
+/* setup ports for sensors */
+void Setup() {
+#warning running stub for "sensors::Setup"
+}
 }  // namespace sensors
 
 /* Setup the hardware sensors/motors */
-void Setup();
+void Setup() {
+  sensors::Setup();
+  executer::Setup();
+}
 }  // namespace hardware
 
 struct Player {
