@@ -10,7 +10,7 @@
 */
 typedef unsigned int uint;
 
-enum class Operation { kShoot = 0, kLoad, kDefend, kNotAvailable };
+enum class Operation { kNotAvailable = 0, kLoad, kDefend, kShoot };
 
 namespace hardware {
 namespace executer {
@@ -113,10 +113,22 @@ void Setup() {
 }
 }  // namespace sensors
 
+namespace userinteraction {
+void SetWinnerLeftLight();
+void SetWinnerRightLight();
+void SetWinnerBothLights();
+/* handles the request to reset a game */
+void HandleResetButton();
+void Setup() {
+#warning running stub for "userinteraction::Setup"
+}
+}  // namespace userinteraction
+
 /* Setup the hardware sensors/motors */
 void Setup() {
   sensors::Setup();
   executer::Setup();
+  userinteraction::Setup();
 }
 }  // namespace hardware
 
@@ -129,6 +141,8 @@ struct Player {
 namespace gamemaster {
 Player gA, gB;
 uint gTurns;
+constexpr bool kPlayerAOnLeftSide = true;
+constexpr bool kPlayerBOnLeftSide = !kPlayerAOnLeftSide;
 constexpr uint kMaxTurns = 9;
 constexpr uint kMaxScore = 3;
 constexpr uint kMilisecWaitForTurn = 800;
@@ -143,19 +157,48 @@ void GetPlayerMoves(Operation* player1_move, Operation* player2_move,
 }
 void PlayMove(Player* a, Player* b);
 
-/* returns if the game has finished from this turn. Either from points or turn
- * count */
+/* returns if the game ended this turn */
 bool RunOneTurn() {
   GetPlayerMoves(&gA.current_turn, &gB.current_turn, kMilisecWaitForTurn);
   PlayMove(&gA, &gB);
   return GameIsDone();
 }
+/* returns if the game ended this turn */
 bool GameIsDone() {
   return (gTurns >= kMaxTurns) || (gA.points >= kMaxScore) ||
          (gB.points >= kMaxScore);
 }
+bool PlayerWon(const Player& p) { return (p.points >= kMaxScore); }
+
 void RunOneGame() {
   while (!gamemaster::RunOneTurn()) {
+  }
+  // now annoucing winner
+  bool status_player_a = PlayerWon(gA);
+  bool status_player_b = PlayerWon(gB);
+  if (status_player_a == status_player_b) {
+    // either both won or both lost
+    hardware::userinteraction::SetWinnerBothLight();
+    return;
+  }
+  if (status_player_a) {
+    // player a won
+    if (kPlayerAOnLeftSide) {
+      hardware::userinteraction::SetWinnerLeftLight();
+      return;
+    } else {
+      hardware::userinteraction::SetWinnerRightLight();
+      return;
+    }
+  } else {
+    // player b won
+    if (kPlayerBOnLeftSide) {
+      hardware::userinteraction::SetWinnerLeftLight();
+      return;
+    } else {
+      hardware::userinteraction::SetWinnerRightLight();
+      return;
+    }
   }
 }
 void ResetGame() {
